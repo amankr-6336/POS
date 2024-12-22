@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const orderSchema = new mongoose.Schema({
     table: { type: mongoose.Schema.Types.ObjectId, ref: 'Table', required: true },
     restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
