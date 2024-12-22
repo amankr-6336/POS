@@ -3,6 +3,7 @@ const DbConnect=require('./DbConnect');
 const AuthRouter=require('./Router/AuthRouter');
 const RestaurantRouter=require('./Router/RestaurantRouter');
 const TableRouter=require('./Router/TableRouter');
+const MenuRouter=require('./Router/MenuRouter');
 const morgan=require('morgan')
 
 const app=express();
@@ -13,6 +14,7 @@ app.use(express.json({limit:'10mb'}));
 app.use('/auth',AuthRouter);
 app.use('/restaurant',RestaurantRouter);
 app.use('/table',TableRouter);
+app.use('/menu',MenuRouter);
 
 app.get('/' , (req,res) => {
     res.status(200).send("hiiii");
