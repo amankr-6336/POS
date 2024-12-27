@@ -4,6 +4,8 @@ const AuthRouter=require('./Router/AuthRouter');
 const RestaurantRouter=require('./Router/RestaurantRouter');
 const TableRouter=require('./Router/TableRouter');
 const MenuRouter=require('./Router/MenuRouter');
+const CategoryRouter=require('./Router/CategoryRouter')
+const OrderRouter=require('./Router/OrderRouter')
 const morgan=require('morgan')
 
 const app=express();
@@ -15,6 +17,8 @@ app.use('/auth',AuthRouter);
 app.use('/restaurant',RestaurantRouter);
 app.use('/table',TableRouter);
 app.use('/menu',MenuRouter);
+app.use('/category',CategoryRouter);
+app.use('/order',OrderRouter);
 
 app.get('/' , (req,res) => {
     res.status(200).send("hiiii");

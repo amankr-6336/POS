@@ -4,11 +4,11 @@ const { error, success } = require('../Utils/Utils');
 
 
 const AddMenuController=async (req,res)=>{
-    const {restroId,name,description,price,category}=req.body;
+    const {restroId,name,description,price,categoryId}=req.body;
     try {
         const restaurant=await Restaurant.findById(restroId);
 
-        const menu=await Menu.create({restroId,name,description,price,category});
+        const menu=await Menu.create({restroId,name,description,price,categoryId});
 
         const savedMenu=await menu.save();
         restaurant.menu.push(savedMenu._id);
@@ -21,4 +21,43 @@ const AddMenuController=async (req,res)=>{
     }
 }
 
-module.exports={AddMenuController};
+const UpdateMenuInfoController=async (req,res)=>{
+    const {menuId,updates}=req.body;
+
+    try {
+        const menu=await Menu.findById(menuId);
+
+        if(!menu){
+            return res.send(success(404,"Menu not Found"));
+        }
+        Object.assign(menu,updates);
+        const savedMenu =await menu.save();
+        return res.send(success(201,{savedMenu}))
+    } catch (error) {
+        console.log(error);
+        return res.send(501,"error");
+    }
+}
+
+const deletMenuController=async (req,res)=>{
+    const{menuId,restroId}=req.body;
+    try {
+        const menu=await Menu.findById(menuId);
+        if(!menu){
+            return res.send(error(404,"menu not found"));
+        }
+        await Menu.findByIdAndDelete(menuId);
+
+        await Restaurant.findByIdAndUpdate(restroId,{
+            $pull:{menu:menuId}
+        })
+
+        return res.send(success(201,"menu deleted successfully"));
+
+    } catch (error) {
+        console.log(error);
+        return res.send(501,"error");
+    }
+}
+
+module.exports={AddMenuController,UpdateMenuInfoController,deletMenuController};
