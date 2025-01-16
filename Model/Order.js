@@ -9,8 +9,11 @@ const orderSchema = new mongoose.Schema({
         quantity: { type: Number, required: true },
       },
     ],
+    kotIds:[ {type: mongoose.Schema.Types.ObjectId, ref: 'KOT'}],
+    user:{type:String,required:true},
+    userNumber:{type:Number,required:true},
     totalPrice: { type: Number, required: true },
-    status: { type: String, enum: ['pending', 'preparing', 'served'], default: 'pending' },
+    status: { type: String, enum: ['orderConfirmed', 'preparing', 'served' ,'paid'], default: 'orderConfirmed' },
     createdAt: { type: Date, default: Date.now },
   });
   

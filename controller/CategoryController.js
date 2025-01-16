@@ -2,10 +2,10 @@ const Category=require('../Model/CategorySchema');
 const { error, success } = require('../Utils/Utils');
 
 const createCategoryController= async (req,res) =>{
-    const{restroId,name,description}=req.body;
+    const{restaurantId,name,description}=req.body;
 
     try {
-        const category = await Category.create({ name, description,restaurantId:restroId });
+        const category = await Category.create({ name, description,restaurantId:restaurantId });
         return res.send(success(201,{message:"category created",category}));
 
     } catch (error) {
@@ -15,10 +15,10 @@ const createCategoryController= async (req,res) =>{
 }
 
 const getListOfCategoryController= async (req,res) =>{
-    const{restroId}=req.body;
+    const{restaurantId}=req.query;
 
     try {
-        const categories = await Category.find({ restaurantId:restroId });
+        const categories = await Category.find({ restaurantId:restaurantId});
         return res.send(success(201,{message:"category created",categories}));
 
     } catch (error) {

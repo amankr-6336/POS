@@ -5,7 +5,7 @@ const { error, success } = require('../Utils/Utils');
 
 const CreateTableController=async(req,res)=>{
    const {restroId,tableNumber}=req.body;
-   const qrCodeData= `http://localhost:3000/table/${tableNumber}`;
+   const qrCodeData= `http://localhost:3000/${restroId}/${tableNumber}`;
    const qrCode= await QRCode.toDataURL(qrCodeData);
 
    try {
@@ -26,8 +26,8 @@ const CreateTableController=async(req,res)=>{
 }
 
 const getTablesController=async (req,res)=>{
-   const { restaurantId } = req.body; // Assuming the restaurant ID is passed as a URL parameter
-
+   const { restaurantId } = req.query; // Assuming the restaurant ID is passed as a URL parameter
+    console.log(restaurantId);
     try {
         // Validate the input
         if (!restaurantId) {
@@ -51,4 +51,17 @@ const getTablesController=async (req,res)=>{
      }
 }
 
-module.exports={CreateTableController,getTablesController};
+const getTableInformation=async (req,res)=>{
+   const {restaurantId,tableNumber}=req.query;
+
+   try {
+      const table=await Table.findOne({restaurantId,tableNumber});
+
+      return res.send(success(200,{message:"okay",table}))
+
+   } catch (error) {
+      return res.send(500,error);
+   }
+}
+
+module.exports={CreateTableController,getTablesController,getTableInformation};
