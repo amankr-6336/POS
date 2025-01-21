@@ -31,7 +31,7 @@ const createRestaurantController= async(req,res)=>{
 const getRestaurantInfoController= async (req,res)=>{
     const {RestaurantId}=req.body;
     try {
-        const restaurant= await Restaurant.findById(RestaurantId).populate('tables').populate('menu');
+        const restaurant= await Restaurant.findById(RestaurantId).populate('tables').populate('menu').populate('owner');
         if(!restaurant){
             return res.send(error(404,"no matching found"));
         }

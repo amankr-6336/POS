@@ -2,6 +2,7 @@ const express = require("express");
 const { Server } = require("socket.io");
 const http = require("http");
 const cors = require("cors");
+const dotenv=require('dotenv');
 const DbConnect = require("./DbConnect");
 const AuthRouter = require("./Router/AuthRouter");
 const RestaurantRouter = require("./Router/RestaurantRouter");
@@ -11,6 +12,8 @@ const CategoryRouter = require("./Router/CategoryRouter");
 const OrderRouter = require("./Router/OrderRouter");
 const morgan = require("morgan");
 const { Socket } = require("dgram");
+
+dotenv.config('./env');
 
 const app = express();
 const server = http.createServer(app);
@@ -76,6 +79,8 @@ io.on("connection", (socket) => {
       console.log("Error: No restaurantId provided in the order");
     }
   });
+
+  
 
   // Handle client disconnection
   socket.on("disconnect", () => {

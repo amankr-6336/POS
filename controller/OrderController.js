@@ -24,7 +24,6 @@ const createOrder = async (req, res) => {
     const menuItems = await Menu.find({
       _id: { $in: items.map((item) => item.menuItem) },
     }).populate("categoryId");
-
     // Group items by category
     const itemsByCategory = items.reduce((grouped, item) => {
       const menuItem = menuItems.find((m) => m._id.equals(item.menuItem));
@@ -92,19 +91,34 @@ const createOrder = async (req, res) => {
     await order.save();
 
     // Populate menuItem in order items
-    const populatedOrder = await Order.findById(order._id).populate({
-      path: "items.menuItem",
-      select: "name price categoryId",
-      populate: {
-        path: "categoryId",
-        select: "name",
-      },
-    });
+    // const populatedOrder = await Order.findById(order._id).populate({
+    //   path: "items.menuItem",
+    //   select: "name price categoryId",
+    //   populate: {
+    //     path: "categoryId",
+    //     select: "name",
+    //   },
+    // });
 
+    const populatedOrder = await Order.findById(order._id).populate([
+      {
+        path: "items.menuItem",
+        select: "name price categoryId",
+        populate: {
+          path: "categoryId",
+          select: "name",
+        },
+      },
+      {
+        path: "table", // Populate the table information
+        select: "tableNumber status", // Specify the fields to include from the Table model
+      },
+    ]);
+  
     kots.forEach(({ category, kot }) => {
       printKOT(category, kot); // Example function to print or display KOT
     });
-
+ 
     // if (restaurantId) {
     //   console.log(io);
     //   io.to(restaurantId).emit("newOrder", newOrder); // Emit to the restaurant's room
