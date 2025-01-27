@@ -4,7 +4,8 @@ const Menu=require('../Model/Menu');
 const { error, success } = require('../Utils/Utils');
 
 const createRestaurantController= async(req,res)=>{
-    const{name,address,phone,ownerId}=req.body;
+    const{name,address,phone}=req.body;
+    const ownerId=req._id;
 
     try {
         const owner=await User.findById(ownerId);
@@ -20,6 +21,8 @@ const createRestaurantController= async(req,res)=>{
         });
 
         const savedRestaurant=await restaurant.save();
+        owner.restaurant = savedRestaurant._id;
+        await owner.save();
 
         return res.send(success(201,{message: "restro created successfully",restaurant:savedRestaurant}))
     } catch (error) {
@@ -29,9 +32,9 @@ const createRestaurantController= async(req,res)=>{
 }
 
 const getRestaurantInfoController= async (req,res)=>{
-    const {RestaurantId}=req.body;
+    const userId=req._id;
     try {
-        const restaurant= await Restaurant.findById(RestaurantId).populate('tables').populate('menu').populate('owner');
+        const restaurant= await Restaurant.findOne({ owner: userId }).populate('tables').populate('menu').populate('owner');
         if(!restaurant){
             return res.send(error(404,"no matching found"));
         }

@@ -80,8 +80,8 @@ const LoginController = async (req, res) => {
       httpOnly: true,
       secure: true,
     });
-
-    return res.json({ accessToken });
+     
+    return res.send(success(201,{accessToken}));
 
     // return res.send(success(200,{user}));
   } catch (e) {
@@ -143,4 +143,4 @@ const refreshAccessTokenController = async (req, res) => {
   }
 };
 
-module.exports = { SignUpController, LoginController };
+module.exports = { SignUpController, LoginController ,refreshAccessTokenController };

@@ -1,12 +1,14 @@
-const router=require('express').Router();
-const MenuController=require('../controller/MenuController');
+const router = require("express").Router();
+const MenuController = require("../controller/MenuController");
+const UserRequire = require("../middleware/UserRequire");
 
+router.post("/add-menu", UserRequire, MenuController.AddMenuController);
+router.patch(
+  "/update-menu",
+  UserRequire,
+  MenuController.UpdateMenuInfoController
+);
+router.delete("/delete-menu", UserRequire, MenuController.deletMenuController);
+router.get("/get-menu", UserRequire, MenuController.getMenuBasedOnCategory);
 
-
-router.post('/add-menu',MenuController.AddMenuController);
-router.patch('/update-menu',MenuController.UpdateMenuInfoController);
-router.delete('/delete-menu',MenuController.deletMenuController);
-router.get('/get-menu',MenuController.getMenuBasedOnCategory)
-
-
-module.exports=router;
+module.exports = router;
