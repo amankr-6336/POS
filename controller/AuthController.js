@@ -142,5 +142,17 @@ const refreshAccessTokenController = async (req, res) => {
     // return res.status(401).send("invalid refresh key");
   }
 };
+const logoutController= async (req,res)=>{
+  try {
+      res.clearCookie('jwt',{
+          httpOnly:true,
+          secure:true
+      });
+      return res.send(success(201,"user logout"))
 
-module.exports = { SignUpController, LoginController ,refreshAccessTokenController };
+  } catch (e) {
+      return res.send(error(500,e.message));
+  }
+}
+
+module.exports = { SignUpController, LoginController ,refreshAccessTokenController,logoutController };

@@ -66,12 +66,28 @@ const createOrder = async (req, res) => {
     });
 
     await order.save();
-    table.status = "occupied";
-    table.currentOrderId = order._id;
-    await table.save();
+    // table.status = "occupied";
+    // table.currentOrderId = order._id;
+    // await table.save();
 
     // Update the table to "occupied"
-    await Table.findByIdAndUpdate(tableId, { isOccupied: true });
+    // await Table.findByIdAndUpdate(tableId, { isOccupied: true });
+    // console.log(table);
+  //   const updatedTable = await Table.findById(table._id);
+  //  console.log("Updated Table:", updatedTable)
+
+  //  await Table.findByIdAndUpdate(
+  //   tableId,
+  //   { status: "occupied", currentOrderId: order._id },
+  //   { new: true }
+  // );
+  
+  await Table.findByIdAndUpdate(
+    tableId,
+    { status: "occupied", currentOrderId: order._id },
+    { new: true }
+  )
+
 
     const kots = [];
     const kotIds = [];
@@ -89,6 +105,7 @@ const createOrder = async (req, res) => {
     // Add KOT IDs to the order
     order.kotIds = kotIds;
     await order.save();
+
 
     // Populate menuItem in order items
     // const populatedOrder = await Order.findById(order._id).populate({
@@ -119,14 +136,6 @@ const createOrder = async (req, res) => {
       printKOT(category, kot); // Example function to print or display KOT
     });
  
-    // if (restaurantId) {
-    //   console.log(io);
-    //   io.to(restaurantId).emit("newOrder", newOrder); // Emit to the restaurant's room
-    //   console.log(`Order broadcasted to room from customer: ${restaurantId}`);
-    // } else {
-    //   console.log("Error: No restaurantId provided in the order");
-    // }
-
     return res
       .status(201)
       .json({
@@ -217,13 +226,29 @@ const getAllOrders = async (req, res) => {
 };
 
 const OrderStatusChange=async (req,res)=>{
-  const {orderId,status}=req.body
+  const {orderId,status,tableId}=req.body
   try {
     const order = await Order.findByIdAndUpdate(
       orderId, 
       { status }, // Update the status field
       { new: true } // Return the updated document
     );
+    
+    if(status==="paid"){
+      const table = await Table.findById(tableId);
+      if (table) {
+          table.status = "available";
+          await table.save();
+      }
+    }
+    else{
+      const table = await Table.findById(tableId);
+      if (table) {
+          table.status = "occupied";
+          await table.save();
+      }
+    }
+
     return res.send(success(201,order));
   } catch (error) {
     return res.send(501,error);
