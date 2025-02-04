@@ -10,7 +10,8 @@ const TableRouter = require("./Router/TableRouter");
 const MenuRouter = require("./Router/MenuRouter");
 const CategoryRouter = require("./Router/CategoryRouter");
 const OrderRouter = require("./Router/OrderRouter");
-const UserRouter=require("./Router/UserRouter")
+const UserRouter=require("./Router/UserRouter");
+const OtpRouter=require('./Router/OtpRouter');
 const morgan = require("morgan");
 const { Socket } = require("dgram");
 
@@ -55,6 +56,7 @@ app.use("/menu", MenuRouter);
 app.use("/category", CategoryRouter);
 app.use("/order", OrderRouter);
 app.use('/owner',UserRouter);
+app.use('/otp',OtpRouter);
 
 app.get("/", (req, res) => {
   res.status(200).send("socket.Io server is running");
