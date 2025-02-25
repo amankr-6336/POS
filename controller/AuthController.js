@@ -103,7 +103,7 @@ const generateAccessToken = (data) => {
 
 const generateRefreshToken = (data) => {
   try {
-    const token = jwt.sign(data, process.env.REFRESH_TOKEN_KEY, {
+    const token = jwt.sign(data, process.env.REFRESH_TOKEN_PRIVATE, {
       expiresIn: "1y",
     });
     return token;
@@ -129,7 +129,7 @@ const refreshAccessTokenController = async (req, res) => {
   // }
 
   try {
-    const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY);
+    const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_PRIVATE);
     const _id = decode._id;
     const accessToken = generateAccessToken({ _id });
 

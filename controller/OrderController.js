@@ -2,9 +2,10 @@ const Menu = require("../Model/Menu");
 const Table = require("../Model/Table");
 const Restaurant = require("../Model/Restaurant");
 const Order = require("../Model/Order");
+const Notification=require('../Model/NotificationSchema.js')
 const KOT = require("../Model/KotSchema");
 const { success, error } = require("../Utils/Utils");
-const io=require("../Index.js")
+const { getIo } = require("../Utils/Socket.js");
 
 const createOrder = async (req, res) => {
   try {
@@ -66,27 +67,29 @@ const createOrder = async (req, res) => {
     });
 
     await order.save();
-    // table.status = "occupied";
-    // table.currentOrderId = order._id;
-    // await table.save();
-
-    // Update the table to "occupied"
-    // await Table.findByIdAndUpdate(tableId, { isOccupied: true });
-    // console.log(table);
-  //   const updatedTable = await Table.findById(table._id);
-  //  console.log("Updated Table:", updatedTable)
-
-  //  await Table.findByIdAndUpdate(
-  //   tableId,
-  //   { status: "occupied", currentOrderId: order._id },
-  //   { new: true }
-  // );
+   
   
   await Table.findByIdAndUpdate(
     tableId,
     { status: "occupied", currentOrderId: order._id },
     { new: true }
   )
+
+  const notification =await Notification.create({
+    restroId:restaurantId,
+    message: `New Order Received from ${table.tableNumber}`,
+    type : "order"
+  })
+
+  await notification.save();
+
+  const io = getIo(); // Get the initialized Socket.io instance
+  const roomId = restaurantId.toString(); // Convert ID to string for socket room
+
+  // Emit notification event
+
+  console.log(`Order & notification emitted to room: ${roomId}`);
+  
 
 
     const kots = [];
@@ -135,6 +138,9 @@ const createOrder = async (req, res) => {
     kots.forEach(({ category, kot }) => {
       printKOT(category, kot); // Example function to print or display KOT
     });
+
+    io.to(roomId).emit("newOrder", populatedOrder); // Emit new order event
+    io.to(roomId).emit("newOrderNotification", notification);
  
     return res
       .status(201)

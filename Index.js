@@ -12,21 +12,25 @@ const CategoryRouter = require("./Router/CategoryRouter");
 const OrderRouter = require("./Router/OrderRouter");
 const UserRouter=require("./Router/UserRouter");
 const OtpRouter=require('./Router/OtpRouter');
+const NotificationRouter=require('./Router/NotificationRouter');
 const morgan = require("morgan");
 const { Socket } = require("dgram");
+const { initializeSocket } = require("./Utils/Socket");
 
-dotenv.config('./env');
+dotenv.config('./');
 
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: ["http://localhost:3001", "http://localhost:3000"], // Allowed origins for Socket.IO
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+initializeSocket(server)
+
+// const io = new Server(server, {
+//   cors: {
+//     origin: ["http://localhost:3001", "http://localhost:3000"], // Allowed origins for Socket.IO
+//     methods: ["GET", "POST"],
+//     credentials: true,
+//   },
+// });
 
 
 
@@ -57,40 +61,41 @@ app.use("/category", CategoryRouter);
 app.use("/order", OrderRouter);
 app.use('/owner',UserRouter);
 app.use('/otp',OtpRouter);
+app.use('/notification',NotificationRouter);
 
 app.get("/", (req, res) => {
   res.status(200).send("socket.Io server is running");
 });
 
-io.on("connection", (socket) => {
-  console.log(`Client connected: ${socket.id}`);
+// io.on("connection", (socket) => {
+//   console.log(`Client connected: ${socket.id}`);
 
-  // Handle restaurant joining a room
-  socket.on("joinRoom", ({ restaurantId }) => {
-    socket.join(restaurantId); // Add the client to the restaurant's room
-    console.log(`Socket ${socket.id} joined room: ${restaurantId}`);
-  });
+//   // Handle restaurant joining a room
+//   socket.on("joinRoom", ({ restaurantId }) => {
+//     socket.join(restaurantId); // Add the client to the restaurant's room
+//     console.log(`Socket ${socket.id} joined room: ${restaurantId}`);
+//   });
 
-  // Handle new order placement
-  socket.on("orderPlaced", (order) => {
+//   // Handle new order placement
+//   socket.on("orderPlaced", (order) => {
     
-    // Emit the new order event only to the specific restaurant's room
-    const restaurantId = order.order.restaurant; // Ensure the order includes the restaurantId
-    if (restaurantId) {
-      io.to(restaurantId).emit("newOrder", order);
-      console.log(`Order broadcasted to room: ${restaurantId}`);
-    } else {
-      console.log("Error: No restaurantId provided in the order");
-    }
-  });
+//     // Emit the new order event only to the specific restaurant's room
+//     const restaurantId = order.order.restaurant; // Ensure the order includes the restaurantId
+//     if (restaurantId) {
+//       io.to(restaurantId).emit("newOrder", order);
+//       console.log(`Order broadcasted to room: ${restaurantId}`);
+//     } else {
+//       console.log("Error: No restaurantId provided in the order");
+//     }
+//   });
 
   
 
-  // Handle client disconnection
-  socket.on("disconnect", () => {
-    console.log(`Client disconnected: ${socket.id}`);
-  });
-});
+//   // Handle client disconnection
+//   socket.on("disconnect", () => {
+//     console.log(`Client disconnected: ${socket.id}`);
+//   });
+// });
 
 const PORT = 4001;
 DbConnect().then(() => {
@@ -104,5 +109,3 @@ DbConnect().then(() => {
 // })
 
 // console.log(io);
-
-module.exports=io;

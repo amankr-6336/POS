@@ -7,7 +7,7 @@ const UserRequire = require("../middleware/UserRequire");
 router.post('/signup',autControllerSignup.SignUpController);
 router.post('/login', autControllerLogin.LoginController);
 router.get('/refresh',refreshController.refreshAccessTokenController);
-router.post('/logout',UserRequire,autControllerLogin.logoutController);
+router.post('/logout',autControllerLogin.logoutController);
 
 
 module.exports=router;
