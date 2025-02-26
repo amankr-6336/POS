@@ -49,10 +49,10 @@ const markAllAsRead = async (req, res) => {
             { $set: { isRead: true } }
         );
 
-        return res.status(200).json({ success: true, message: "All notifications marked as read" });
+        return res.send(success(200,"ALL notification marked read"));
     } catch (error) {
         console.error("Error marking notifications as read:", error);
-        return res.status(500).json({ success: false, message: "Internal Server Error" });
+        return res.send(500,error);
     }
 };
 
