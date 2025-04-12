@@ -1,11 +1,28 @@
 const Menu = require("../Model/Menu");
 const Restaurant = require("../Model/Restaurant");
 const { error, success } = require("../Utils/Utils");
+const cloudinary = require("cloudinary").v2;
+const axios=require('axios');
+const getEmbedding = require("../Utils/EmbeddedSetting");
 
 const AddMenuController = async (req, res) => {
-  const { restroId, name, description, price, categoryId ,isVeg ,isStock } = req.body;
+  const { restroId, name, description, price, categoryId, isVeg, isStock, image } = req.body;
   try {
     const restaurant = await Restaurant.findById(restroId);
+    
+    const cloudImg = await cloudinary.uploader.upload(image, {
+      folder: "PosImages"
+    });
+
+    const optimizedUrl = cloudinary.url(cloudImg.public_id, {
+      transformation: [
+        { width: 500, height: 500, crop: "fill" },
+        { quality: "auto" },
+        { fetch_format: "webp" }
+      ]
+    });
+
+    const embedding = await getEmbedding(`${name} ${description}`);
 
     const menu = await Menu.create({
       restroId,
@@ -14,7 +31,13 @@ const AddMenuController = async (req, res) => {
       price,
       categoryId,
       isVeg,
-      isStock
+      isStock,
+      embedding,
+      image: {
+        publicId: cloudImg.public_id,
+        url: cloudImg.secure_url,
+        optimized:optimizedUrl
+      }
     });
 
     const savedMenu = await menu.save();
@@ -27,6 +50,7 @@ const AddMenuController = async (req, res) => {
     return res.send(501, "error");
   }
 };
+
 
 const UpdateMenuInfoController = async (req, res) => {
   const { menuId, updates } = req.body;

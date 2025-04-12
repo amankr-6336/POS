@@ -6,8 +6,8 @@ const getOwnerInfo= async (req,res)=>{
     try {
         const user=await User.findById(req._id).populate('restaurant');
         return res.send(success(201,user));
-    } catch (error) {
-        return res.send(error(400,error));
+    } catch (err) {
+        return res.send(error(400,err));
     }
 }
 
