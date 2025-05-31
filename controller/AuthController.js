@@ -2,28 +2,30 @@ const User = require("../Model/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const {OAuth2Client}=require ('google-auth-library');
 const { error, success } = require("../Utils/Utils");
+
+
+const client=new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const SignUpController = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { userName, email, password } = req.body;
 
-    if (!email || !password || !name) {
-      return res.send(error(400, "all fields are required"));
-      // return res.status(409).send("Already have a account on this email");
+    if (!email || !password || !userName) {
+      return res.send(error(400, "All fields are required"));
     }
 
     const oldUser = await User.findOne({ email });
 
     if (oldUser) {
       return res.send(error(409, "Already have a account on this email"));
-      // return res.status(409).send("Already have a account on this email");
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
+      userName,
       email,
       password: hashPassword,
     });
@@ -34,19 +36,52 @@ const SignUpController = async (req, res) => {
 
     res.cookie("jwt", refreshToken, {
       httpOnly: true,
+      secure: true, 
+    });
+    
+    return res.send(success(201, { user, accessToken }));
+
+  } catch (e) {
+    return res.send(error(501,e.message));
+  }
+};
+
+const signInGoogleController=async (req,res)=>{
+  try {
+    const {token}=req.body;
+
+    const ticket=await client.verifyIdToken({
+      idToken:token,
+      audience:process.env.GOOGLE_CLIENT_ID
+    })
+
+    const payload=ticket.getPayload();
+    const {email,name}=payload;
+
+    let user=await User.findOne({email});
+
+    if(!user){
+       user=await User.create({
+        name,
+        email
+       })
+    }
+    
+    const accessToken = generateAccessToken({ _id: user._id });
+
+    const refreshToken = generateRefreshToken({ _id: user._id });
+
+    res.cookie("jwt", refreshToken, {
+      httpOnly: true,
       secure: true,
     });
 
-    // return res.status(201).json({
-    //     user,
-    // });
-    const newUser = await User.findById(user._id);
-    return res.send(success(201, { newUser, accessToken }));
+    return res.send(success(201, { user, accessToken }));
+
   } catch (e) {
-    console.log(e);
-    return res.send(501, "error");
+     return res.send(error(501,e.message))
   }
-};
+}
 
 const LoginController = async (req, res) => {
   try {
@@ -54,22 +89,19 @@ const LoginController = async (req, res) => {
     console.log(email, password);
 
     if (!email || !password) {
-      return res.send(error(400, "all field are requires"));
-      // return res.status(400).send("all field are requires");
+      return res.send(error(400, "All field are requires"));
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password").populate('restaurant');
 
     if (!user) {
-      return res.send(error(404, "email not registered"));
-      // return res.status(404).send("email not registered");
+      return res.send(error(404, "Email not registered"));
     }
 
     const matched = await bcrypt.compare(password, user.password);
 
     if (!matched) {
       return res.send(error(403, "incorrect password"));
-      // return res.status(403).send("incorrect password");
     }
 
     const accessToken = generateAccessToken({ _id: user._id });
@@ -80,10 +112,9 @@ const LoginController = async (req, res) => {
       httpOnly: true,
       secure: true,
     });
+    console.log(user);
      
-    return res.send(success(201,{accessToken}));
-
-    // return res.send(success(200,{user}));
+    return res.send(success(201,{accessToken,user}));
   } catch (e) {
     return res.send(error(501, e.message));
   }
@@ -116,30 +147,18 @@ const refreshAccessTokenController = async (req, res) => {
   const cookies = req.cookies;
 
   if (!cookies.jwt) {
-    return res.send(error(401, "refresh token is require in cookie"));
-    // return res.status(401).send("refresh token is require in cookie");
+    return res.send(error(401, "Refresh token is require in cookie"));
   }
   const refreshToken = cookies.jwt;
-
-  // console.log("refresh token",refreshToken);
-
-  // if(!refreshToken){
-  //      return res.send(error(401,"refresh token is required"));
-  //     // return res.status(401).send("refresh token is required");
-  // }
 
   try {
     const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_PRIVATE);
     const _id = decode._id;
     const accessToken = generateAccessToken({ _id });
 
-    // return res.status(201).json({accessToken});
-
     return res.send(success(201, { accessToken }));
   } catch (e) {
-    // console.log(e);
-    return res.send(error(401, "invalid refresh key"));
-    // return res.status(401).send("invalid refresh key");
+    return res.send(error(401, "Invalid refresh key"));
   }
 };
 const logoutController= async (req,res)=>{
@@ -155,4 +174,4 @@ const logoutController= async (req,res)=>{
   }
 }
 
-module.exports = { SignUpController, LoginController ,refreshAccessTokenController,logoutController };
+module.exports = { SignUpController, signInGoogleController , LoginController ,refreshAccessTokenController,logoutController };

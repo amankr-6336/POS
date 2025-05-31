@@ -6,6 +6,7 @@ const Notification=require('../Model/NotificationSchema.js')
 const KOT = require("../Model/KotSchema");
 const { success, error } = require("../Utils/Utils");
 const { getIo } = require("../Utils/Socket.js");
+const { generateDashboardData } = require("./DashBoardService.js");
 
 const createOrder = async (req, res) => {
   try {
@@ -24,7 +25,9 @@ const createOrder = async (req, res) => {
     // Fetch menu items and populate category details
     const menuItems = await Menu.find({
       _id: { $in: items.map((item) => item.menuItem) },
+      restaurant: restaurantId,
     }).populate("categoryId");
+
     // Group items by category
     const itemsByCategory = items.reduce((grouped, item) => {
       const menuItem = menuItems.find((m) => m._id.equals(item.menuItem));
@@ -69,11 +72,11 @@ const createOrder = async (req, res) => {
     await order.save();
    
   
-  await Table.findByIdAndUpdate(
+  const result=await Table.findByIdAndUpdate(
     tableId,
     { status: "occupied", currentOrderId: order._id },
-    { new: true }
   )
+
 
   const notification =await Notification.create({
     restroId:restaurantId,
@@ -88,10 +91,8 @@ const createOrder = async (req, res) => {
 
   // Emit notification event
 
-  console.log(`Order & notification emitted to room: ${roomId}`);
+  // console.log(`Order & notification emitted to room: ${roomId}`);
   
-
-
     const kots = [];
     const kotIds = [];
     for (const [category, categoryItems] of Object.entries(itemsByCategory)) {
@@ -141,14 +142,18 @@ const createOrder = async (req, res) => {
 
     io.to(roomId).emit("newOrder", populatedOrder); // Emit new order event
     io.to(roomId).emit("newOrderNotification", notification);
+
+    const dashboardData = await generateDashboardData("daily",restaurantId);
+     io.to(roomId).emit("dashboardData",dashboardData);
  
-    return res
-      .status(201)
-      .json({
-        message: "Order created successfully",
-        order: populatedOrder,
-        kots,
-      });
+    // return res
+    //   .status(201)
+    //   .json({
+    //     message: "Order created successfully",
+    //     order: populatedOrder,
+    //     kots,
+    //   });
+      return res.send(success(201,{orders:populatedOrder,kots}))
   } catch (error) {
     console.log(error);
     return res

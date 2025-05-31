@@ -25,7 +25,7 @@ const AddMenuController = async (req, res) => {
     const embedding = await getEmbedding(`${name} ${description}`);
 
     const menu = await Menu.create({
-      restroId,
+      restaurant:restroId,
       name,
       description,
       price,
@@ -45,9 +45,9 @@ const AddMenuController = async (req, res) => {
     await restaurant.save();
 
     return res.send(success(201, { message: "menu created", savedMenu }));
-  } catch (error) {
-    console.log(error);
-    return res.send(501, "error");
+  } catch (e) {
+    
+    return res.send(error(501,e.message));
   }
 };
 

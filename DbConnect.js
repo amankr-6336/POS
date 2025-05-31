@@ -9,7 +9,7 @@ module.exports=async ()=>{
     try {
         const connect=await mongoose.connect(mongoURI, {serverApi: {
             version: ServerApiVersion.v1,
-            strict: true,
+            // strict: true,
             deprecationErrors: true,
           }});
 

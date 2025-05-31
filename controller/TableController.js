@@ -35,6 +35,7 @@ const getTablesController=async (req,res)=>{
 
         // Find tables for the specified restaurant
         const tables = await Table.find({ restroId: restaurantId }).populate('currentOrderId').lean();
+       
         // Check if tables are found
       //   if (!tables || tables.length === 0) {
       //       return res.status(404).send(error(404, "No tables found for the specified restaurant"));
@@ -53,8 +54,9 @@ const getTableInformation=async (req,res)=>{
 
    try {
       const table=await Table.findOne({restaurantId,tableNumber}).populate('currentOrderId');
+      const restro =await Restaurant.findById(restaurantId);
 
-      return res.send(success(200,{message:"okay",table}))
+      return res.send(success(200,{message:"okay",table,restro}))
 
    } catch (error) {
       return res.send(500,error);

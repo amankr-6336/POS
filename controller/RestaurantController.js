@@ -22,12 +22,13 @@ const createRestaurantController= async(req,res)=>{
 
         const savedRestaurant=await restaurant.save();
         owner.restaurant = savedRestaurant._id;
-        await owner.save();
+        const updatedOwner=await owner.save();
+        const ownerInfo=await updatedOwner.populate('restaurant')
 
-        return res.send(success(201,{message: "restro created successfully",restaurant:savedRestaurant}))
-    } catch (error) {
-        console.log(error);
-        return res.send(501,"error");
+        return res.send(success(201,{message: "restro created successfully",ownerInfo}))
+    } catch (e) {
+         console.log(e);
+        return res.send(error(501,e.message));
     }
 }
 

@@ -1,7 +1,7 @@
 
 const success=(statusCode,result)=>{
     return{
-        status:'ok',
+        status:'success',
         statusCode,
         result
     }
