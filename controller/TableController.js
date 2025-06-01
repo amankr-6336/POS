@@ -1,66 +1,88 @@
-const QRCode=require('qrcode');
-const Table=require('../Model/Table');
-const Restaurant=require('../Model/Restaurant');
-const { error, success } = require('../Utils/Utils');
+const QRCode = require("qrcode");
+const Table = require("../Model/Table");
+const Restaurant = require("../Model/Restaurant");
+const { error, success } = require("../Utils/Utils");
+const redis = require("../Utils/Redis");
+const e = require("cors");
 
-const CreateTableController=async(req,res)=>{
-   const {restroId,tableNumber,tableCapacity}=req.body;
-   const qrCodeData= `http://localhost:3000/${restroId}/${tableNumber}`;
-   const qrCode= await QRCode.toDataURL(qrCodeData);
-   
-   try {
-      const restaurant=await Restaurant.findById(restroId);
+const CreateTableController = async (req, res) => {
+  const { restroId, tableNumber, tableCapacity } = req.body;
+  const qrCodeData = `http://localhost:3000/${restroId}/${tableNumber}`;
+  const qrCode = await QRCode.toDataURL(qrCodeData);
+  const cacheKey = `tables:${restroId}`;
 
-      const table=await Table.create({restroId,tableNumber,tableCapacity,qrCode});
-   
-      const savedTable = await table.save();
-      restaurant.tables.push(savedTable._id);
-      await restaurant.save();
+  try {
+    const restaurant = await Restaurant.findById(restroId);
 
-      return res.send(success(201,{message:"table created",savedTable}));
+    const table = await Table.create({
+      restroId,
+      tableNumber,
+      tableCapacity,
+      qrCode,
+    });
 
-   } catch (error) {
-      return res.send(501,"error");
-   }
-}
+    const savedTable = await table.save();
+    restaurant.tables.push(savedTable._id);
+    await restaurant.save();
+    await redis.del(cacheKey);
+    return res.send(success(201, { message: "table created", savedTable }));
+  } catch (e) {
+    return res.send(error(501, e.message));
+  }
+};
 
-const getTablesController=async (req,res)=>{
-   const { restaurantId } = req.query; // Assuming the restaurant ID is passed as a URL parameter
-    console.log(restaurantId);
-    try {
-        // Validate the input
-        if (!restaurantId) {
-            return res.status(400).send(error(400, "Restaurant ID is required"));
-        }
+const getTablesController = async (req, res) => {
+  const { restaurantId } = req.query; // Assuming the restaurant ID is passed as a URL parameter
 
-        // Find tables for the specified restaurant
-        const tables = await Table.find({ restroId: restaurantId }).populate('currentOrderId').lean();
-       
-        // Check if tables are found
-      //   if (!tables || tables.length === 0) {
-      //       return res.status(404).send(error(404, "No tables found for the specified restaurant"));
-      //   }
+  const cacheKey = `tables:${restaurantId}`;
+  try {
+    // Validate the input
+    if (!restaurantId) {
+      return res.status(400).send(error(400, "Restaurant ID is required"));
+    }
 
-        // Send the response
-        return res.status(200).send(success(200, { message: "Tables fetched successfully", tables }));
-      }
-      catch (err) {
-         return res.status(500).send(error(500, "An error occurred while fetching tables"));
-     }
-}
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+      return res.send(success(201, JSON.parse(cachedData)));
+    }
 
-const getTableInformation=async (req,res)=>{
-   const {restaurantId,tableNumber}=req.query;
+    // Find tables for the specified restaurant
+    const tables = await Table.find({ restroId: restaurantId })
+      .populate("currentOrderId")
+      .lean();
 
-   try {
-      const table=await Table.findOne({restaurantId,tableNumber}).populate('currentOrderId');
-      const restro =await Restaurant.findById(restaurantId);
+    // Check if tables are found
+    //   if (!tables || tables.length === 0) {
+    //       return res.status(404).send(error(404, "No tables found for the specified restaurant"));
+    //   }
 
-      return res.send(success(200,{message:"okay",table,restro}))
+    // Send the response
+    await redis.set(cacheKey, JSON.stringify(tables), "EX", 43200);
+    return res
+      .status(200)
+      .send(success(200, { message: "Tables fetched successfully", tables }));
+  } catch (e) {
+    return res.send(error(500, e.message));
+  }
+};
 
-   } catch (error) {
-      return res.send(500,error);
-   }
-}
+const getTableInformation = async (req, res) => {
+  const { restaurantId, tableNumber } = req.query;
 
-module.exports={CreateTableController,getTablesController,getTableInformation};
+  try {
+    const table = await Table.findOne({ restaurantId, tableNumber }).populate(
+      "currentOrderId"
+    );
+    const restro = await Restaurant.findById(restaurantId);
+
+    return res.send(success(200, { message: "okay", table, restro }));
+  } catch (e) {
+    return res.send(error(500, e.message));
+  }
+};
+
+module.exports = {
+  CreateTableController,
+  getTablesController,
+  getTableInformation,
+};

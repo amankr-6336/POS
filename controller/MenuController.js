@@ -4,9 +4,12 @@ const { error, success } = require("../Utils/Utils");
 const cloudinary = require("cloudinary").v2;
 const axios=require('axios');
 const getEmbedding = require("../Utils/EmbeddedSetting");
+const redis=require('../Utils/Redis')
+
 
 const AddMenuController = async (req, res) => {
   const { restroId, name, description, price, categoryId, isVeg, isStock, image } = req.body;
+    const cacheKey=`Menu:${categoryId}`;
   try {
     const restaurant = await Restaurant.findById(restroId);
     
@@ -44,6 +47,8 @@ const AddMenuController = async (req, res) => {
     restaurant.menu.push(savedMenu._id);
     await restaurant.save();
 
+    await redis.del(cacheKey);
+
     return res.send(success(201, { message: "menu created", savedMenu }));
   } catch (e) {
     
@@ -53,7 +58,8 @@ const AddMenuController = async (req, res) => {
 
 
 const UpdateMenuInfoController = async (req, res) => {
-  const { menuId, updates } = req.body;
+  const { menuId, updates ,categoryId} = req.body;
+    const cacheKey=`Menu:${categoryId}`;
 
   try {
     const menu = await Menu.findById(menuId);
@@ -63,15 +69,17 @@ const UpdateMenuInfoController = async (req, res) => {
     }
     Object.assign(menu, updates);
     const savedMenu = await menu.save();
+    await redis.del(cacheKey);
     return res.send(success(201, { savedMenu }));
-  } catch (error) {
-    console.log(error);
-    return res.send(501, "error");
+  } catch (e) {
+   
+    return res.send(error(501,e.message));
   }
 };
 
 const deletMenuController = async (req, res) => {
-  const { menuId, restroId } = req.body;
+  const { menuId, restroId,categoryId } = req.body;
+    const cacheKey=`Menu:${categoryId}`;
   try {
     const menu = await Menu.findById(menuId);
     if (!menu) {
@@ -83,27 +91,36 @@ const deletMenuController = async (req, res) => {
       $pull: { menu: menuId },
     });
 
+    await redis.del(cacheKey);
+
     return res.send(success(201, "menu deleted successfully"));
-  } catch (error) {
-    console.log(error);
-    return res.send(501, "error");
+  } catch (e) {
+     return res.send(error(501,e.message));
   }
 };
 
 const getMenuBasedOnCategory = async (req, res) => {
   const { categoryId } = req.query;
+  const cacheKey=`Menu:${categoryId}`;
   try {
     if (!categoryId) {
       return res.status(400).json({ error: "Category ID is required" });
     }
+    
+    const cachedData=await redis.get(cacheKey);
+
+    if(cachedData){
+      return res.send(success(201,JSON.parse(cachedData)));
+    }
+
     const menus = await Menu.find({ categoryId }).populate({
-      path: "categoryId", // Field to populate
-      select: "name", // Only fetch the `name` field from Category
-    });;
+      path: "categoryId", 
+      select: "name", 
+    });
+    await redis.set(cacheKey,JSON.stringify(menus),'EX',43200);
     return res.send(success(201,{menus}))
-  } catch (error) {
-    console.log(error);
-    return res.send(501,"error");
+  } catch (e) {
+     return res.send(error(501,e.message));
   }
 };
 
