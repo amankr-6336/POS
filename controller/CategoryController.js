@@ -29,7 +29,7 @@ const getListOfCategoryController = async (req, res) => {
   try {
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
-      return res.send(success(201, JSON.parse(cachedData)));
+      return res.send(success(201,{categories:JSON.parse(cachedData)}));
     }
 
     const categories = await Category.find({ restaurantId: restaurantId });

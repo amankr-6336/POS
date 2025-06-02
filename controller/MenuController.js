@@ -110,7 +110,7 @@ const getMenuBasedOnCategory = async (req, res) => {
     const cachedData=await redis.get(cacheKey);
 
     if(cachedData){
-      return res.send(success(201,JSON.parse(cachedData)));
+      return res.send(success(201,{menus:JSON.parse(cachedData)}));
     }
 
     const menus = await Menu.find({ categoryId }).populate({
