@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String},
   restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' },
   role: { type: String, enum: ['owner', 'admin'], default: 'owner' }, // Role of the user
+   fcmTokens: {
+    type: [String], // store multiple tokens per user
+    default: [],
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
