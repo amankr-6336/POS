@@ -16,6 +16,11 @@ const orderSchema = new mongoose.Schema({
     status: { type: String, enum: ['orderConfirmed', 'preparing', 'served' ,'paid'], default: 'orderConfirmed' },
     createdAt: { type: Date, default: Date.now },
   });
+
+  orderSchema.index({ restaurant: 1 });
+  orderSchema.index({ status: 1 });
+  orderSchema.index({ user: 1 });
+  orderSchema.index({ restaurant: 1, createdAt: -1 });
   
   module.exports = mongoose.model('Order', orderSchema);
   

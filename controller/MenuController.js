@@ -12,10 +12,15 @@ const AddMenuController = async (req, res) => {
     const cacheKey=`Menu:${categoryId}`;
   try {
     const restaurant = await Restaurant.findById(restroId);
+
+    const [cloudImg, embedding] = await Promise.all([
+      cloudinary.uploader.upload(image, { folder: "PosImages" }),
+      getEmbedding(`${name} ${description}`)
+    ]);
     
-    const cloudImg = await cloudinary.uploader.upload(image, {
-      folder: "PosImages"
-    });
+    // const cloudImg = await cloudinary.uploader.upload(image, {
+    //   folder: "PosImages"
+    // });
 
     const optimizedUrl = cloudinary.url(cloudImg.public_id, {
       transformation: [
@@ -25,7 +30,7 @@ const AddMenuController = async (req, res) => {
       ]
     });
 
-    const embedding = await getEmbedding(`${name} ${description}`);
+    // const embedding = await getEmbedding(`${name} ${description}`);
 
     const menu = await Menu.create({
       restaurant:restroId,
@@ -51,7 +56,6 @@ const AddMenuController = async (req, res) => {
 
     return res.send(success(201, { message: "menu created", savedMenu }));
   } catch (e) {
-    
     return res.send(error(501,e.message));
   }
 };

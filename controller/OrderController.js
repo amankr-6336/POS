@@ -2,7 +2,7 @@ const Menu = require("../Model/Menu");
 const Table = require("../Model/Table");
 const Restaurant = require("../Model/Restaurant");
 const Order = require("../Model/Order");
-const Notification=require('../Model/NotificationSchema.js')
+const Notification = require("../Model/NotificationSchema.js");
 const KOT = require("../Model/KotSchema");
 const { success, error } = require("../Utils/Utils");
 const { getIo } = require("../Utils/Socket.js");
@@ -70,29 +70,27 @@ const createOrder = async (req, res) => {
     });
 
     await order.save();
-   
-  
-  const result=await Table.findByIdAndUpdate(
-    tableId,
-    { status: "occupied", currentOrderId: order._id },
-  )
 
+    const result = await Table.findByIdAndUpdate(tableId, {
+      status: "occupied",
+      currentOrderId: order._id,
+    });
 
-  const notification =await Notification.create({
-    restroId:restaurantId,
-    message: `New Order Received from ${table.tableNumber}`,
-    type : "order"
-  })
+    const notification = await Notification.create({
+      restroId: restaurantId,
+      message: `New Order Received from ${table.tableNumber}`,
+      type: "order",
+    });
 
-  await notification.save();
+    await notification.save();
 
-  const io = getIo(); // Get the initialized Socket.io instance
-  const roomId = restaurantId.toString(); // Convert ID to string for socket room
+    const io = getIo(); // Get the initialized Socket.io instance
+    const roomId = restaurantId.toString(); // Convert ID to string for socket room
 
-  // Emit notification event
+    // Emit notification event
 
-  // console.log(`Order & notification emitted to room: ${roomId}`);
-  
+    // console.log(`Order & notification emitted to room: ${roomId}`);
+
     const kots = [];
     const kotIds = [];
     for (const [category, categoryItems] of Object.entries(itemsByCategory)) {
@@ -109,7 +107,6 @@ const createOrder = async (req, res) => {
     // Add KOT IDs to the order
     order.kotIds = kotIds;
     await order.save();
-
 
     // Populate menuItem in order items
     // const populatedOrder = await Order.findById(order._id).populate({
@@ -135,7 +132,7 @@ const createOrder = async (req, res) => {
         select: "tableNumber status", // Specify the fields to include from the Table model
       },
     ]);
-  
+
     kots.forEach(({ category, kot }) => {
       printKOT(category, kot); // Example function to print or display KOT
     });
@@ -143,17 +140,12 @@ const createOrder = async (req, res) => {
     io.to(roomId).emit("newOrder", populatedOrder); // Emit new order event
     io.to(roomId).emit("newOrderNotification", notification);
 
-    const dashboardData = await generateDashboardData("daily",restaurantId);
-     io.to(roomId).emit("dashboardData",dashboardData);
- 
-    // return res
-    //   .status(201)
-    //   .json({
-    //     message: "Order created successfully",
-    //     order: populatedOrder,
-    //     kots,
-    //   });
-      return res.send(success(201,{orders:populatedOrder,kots}))
+    const dashboardData = await generateDashboardData("daily", restaurantId);
+    io.to(roomId).emit("dashboardData", dashboardData);
+    n;
+    return res.send(
+      success(201, { message: "Order Placed !!", orders: populatedOrder, kots })
+    );
   } catch (error) {
     console.log(error);
     return res
@@ -161,9 +153,6 @@ const createOrder = async (req, res) => {
       .json({ error: "Internal server error", details: error.message });
   }
 };
-
-
-
 
 const printKOT = (category, kot) => {
   // console.log(`Printing KOT for ${category} Category:`, kot);
@@ -178,7 +167,6 @@ const printBill = async (req, res) => {
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
-
     // Format bill details
     const bill = {
       orderId: order._id,
@@ -193,13 +181,10 @@ const printBill = async (req, res) => {
       totalPrice: order.totalPrice,
       createdAt: order.createdAt,
     };
-
     // Example: Send as JSON (you can generate a PDF here if needed)
-    return res.status(200).json({ message: "Bill generated", bill });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    return res.send(success(201, { message: "Bill generated", bill }));
+  } catch (e) {
+    return res.send(error(500, e.message));
   }
 };
 
@@ -236,34 +221,33 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-const OrderStatusChange=async (req,res)=>{
-  const {orderId,status,tableId}=req.body
+const OrderStatusChange = async (req, res) => {
+  const { orderId, status, tableId } = req.body;
   try {
     const order = await Order.findByIdAndUpdate(
-      orderId, 
+      orderId,
       { status }, // Update the status field
       { new: true } // Return the updated document
     );
-    
-    if(status==="paid"){
+
+    if (status === "paid") {
       const table = await Table.findById(tableId);
       if (table) {
-          table.status = "available";
-          await table.save();
+        table.status = "available";
+        await table.save();
       }
-    }
-    else{
+    } else {
       const table = await Table.findById(tableId);
       if (table) {
-          table.status = "occupied";
-          await table.save();
+        table.status = "occupied";
+        await table.save();
       }
     }
 
-    return res.send(success(201,order));
+    return res.send(success(201, order));
   } catch (error) {
-    return res.send(501,error);
+    return res.send(501, error);
   }
-}
+};
 
-module.exports = { createOrder, printBill, getAllOrders ,OrderStatusChange };
+module.exports = { createOrder, printBill, getAllOrders, OrderStatusChange };
