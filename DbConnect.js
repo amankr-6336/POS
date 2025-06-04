@@ -4,7 +4,7 @@ const { ServerApiVersion } = require('mongodb');
 
 
 module.exports=async ()=>{
-    const mongoURI="mongodb+srv://amankr63366:Callofduty@clusterpos.qhucb.mongodb.net/?retryWrites=true&w=majority&appName=ClusterPOS"
+    const mongoURI=process.env.MONGO_URI_KEY
 
     try {
         const connect=await mongoose.connect(mongoURI, {serverApi: {
