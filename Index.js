@@ -47,7 +47,8 @@ initializeSocket(server)
 app.use(morgan("common"));
 app.use(express.json({ limit: "10mb" }));
 
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
 
 app.use(
   cors({
