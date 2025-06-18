@@ -20,7 +20,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         source: "."
-        target: "/home/ubuntu/pos-backend"
+        target: "/home/ubuntu/POS"
 
     - name: Restart PM2 on EC2
       uses: appleboy/ssh-action@master
@@ -29,6 +29,6 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          cd /home/ubuntu/pos-backend
+          cd /home/ubuntu/POS
           npm install
           pm2 restart pos-backend || pm2 start Index.js --name pos-backend
