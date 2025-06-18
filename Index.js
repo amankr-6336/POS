@@ -66,24 +66,36 @@ app.use(cookieParser());
 //   })
 // );
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+// const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
 
-app.use(
-  cors({
-    credentials: true,
-    origin: function (origin, callback) {
-      console.log("🔥 Incoming Origin:", origin);
-      console.log("✅ Allowed Origins:", allowedOrigins);
+// app.use(
+//   cors({
+//     credentials: true,
+//     origin: function (origin, callback) {
+//       console.log("🔥 Incoming Origin:", origin);
+//       console.log("✅ Allowed Origins:", allowedOrigins);
 
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-  })
-);
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//   })
+// );
 
+const allowedOrigin = "https://restro-side.netlify.app"; // Hardcoded for testing
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || origin === allowedOrigin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
 
 app.use("/auth", AuthRouter);
 app.use("/assistant",AssistantRouter)
