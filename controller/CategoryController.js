@@ -6,8 +6,10 @@ const createCategoryController = async (req, res) => {
   const { restaurantId, name, description } = req.body;
   const cacheKey = `category:${restaurantId}`;
 
+  
+
   try {
-    if (restaurantId || name || description) {
+    if (!restaurantId || !name || !description) {
       return res.send(error(401, "All fields are required"));
     }
     const category = await Category.create({

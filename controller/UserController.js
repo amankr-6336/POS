@@ -5,10 +5,10 @@ const redis = require("../Utils/Redis");
 const getOwnerInfo = async (req, res) => {
   const cacheKey = `ownerInfo:${req._id}`;
   try {
-    const cachedData = await redis.get(cacheKey);
-    if (cachedData) {
-      return res.send(success(201, JSON.parse(cachedData)));
-    }
+    // const cachedData = await redis.get(cacheKey);
+    // if (cachedData) {
+    //   return res.send(success(201, JSON.parse(cachedData)));
+    // }
     const user = await User.findById(req._id).populate("restaurant");
     if (!user) {
       return res.send(error(404, "No user found"));

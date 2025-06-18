@@ -142,7 +142,7 @@ const createOrder = async (req, res) => {
 
     const dashboardData = await generateDashboardData("daily", restaurantId);
     io.to(roomId).emit("dashboardData", dashboardData);
-    n;
+    
     return res.send(
       success(201, { message: "Order Placed !!", orders: populatedOrder, kots })
     );

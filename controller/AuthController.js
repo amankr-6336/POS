@@ -145,7 +145,7 @@ const generateRefreshToken = (data) => {
 
 const refreshAccessTokenController = async (req, res) => {
   const cookies = req.cookies;
-
+  
   if (!cookies.jwt) {
     return res.send(error(401, "Refresh token is require in cookie"));
   }
@@ -155,7 +155,7 @@ const refreshAccessTokenController = async (req, res) => {
     const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_PRIVATE);
     const _id = decode._id;
     const accessToken = generateAccessToken({ _id });
-
+    
     return res.send(success(201, { accessToken }));
   } catch (e) {
     return res.send(error(401, "Invalid refresh key"));

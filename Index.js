@@ -20,6 +20,8 @@ const morgan = require("morgan");
 const { Socket } = require("dgram");
 const { initializeSocket } = require("./Utils/Socket");
 const cloudinary=require('cloudinary').v2;
+const cookieParser = require('cookie-parser');
+
 
 dotenv.config('./');
 
@@ -46,23 +48,42 @@ initializeSocket(server)
 
 app.use(morgan("common"));
 app.use(express.json({ limit: "10mb" }));
+app.use(cookieParser());
 
+// const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+// app.use(
+//   cors({
+//     credentials: true,
+//     origin: function (origin, callback) {
+//       // Check if the origin is in the allowed list
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true); // Allow the request
+//       } else {
+//         callback(new Error("Not allowed by CORS")); // Reject the request
+//       }
+//     },
+//   })
+// );
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
 
 app.use(
   cors({
     credentials: true,
     origin: function (origin, callback) {
-      // Check if the origin is in the allowed list
+      console.log("🔥 Incoming Origin:", origin);
+      console.log("✅ Allowed Origins:", allowedOrigins);
+
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true); // Allow the request
+        callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS")); // Reject the request
+        callback(new Error("Not allowed by CORS"));
       }
     },
   })
 );
+
 
 app.use("/auth", AuthRouter);
 app.use("/assistant",AssistantRouter)
