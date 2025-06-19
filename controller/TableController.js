@@ -7,7 +7,7 @@ const e = require("cors");
 
 const CreateTableController = async (req, res) => {
   const { restroId, tableNumber, tableCapacity } = req.body;
-  const qrCodeData = `http://localhost:3000/${restroId}/${tableNumber}`;
+  const qrCodeData = `https://order-restopia.netlify.app/${restroId}/${tableNumber}`;
   const qrCode = await QRCode.toDataURL(qrCodeData);
   const cacheKey = `tables:${restroId}`;
 

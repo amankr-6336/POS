@@ -3,13 +3,30 @@ const { Server } = require("socket.io");
 let io; // Declare io variable
 
 const initializeSocket = (server) => {
+  // const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
 
+  // io = new Server(server, {
+  //   cors: {
+  //     origin: allowedOrigins,
+  //     methods: ["GET", "POST"],
+  //     credentials: true,
+  //   },
+  // });
 
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",").map((origin) =>
+    origin.trim()
+  );
 
   io = new Server(server, {
     cors: {
-      origin: allowedOrigins,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },
